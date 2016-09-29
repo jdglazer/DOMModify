@@ -1,0 +1,239 @@
+<html>
+<div id="tester" class="hello world"></div>
+<script type="text/javascript">
+	"use strict";
+	
+// Full list of properties and function to search for to allow DOM element to be stored in DOMModify.node
+	var requiredElementProperties = [
+			"accessKey",
+			"appendChild",
+			"childNodes",
+			"className",			
+			"getAttribute",
+			"setAttribute",
+			"id",
+			"innerHTML",
+			"nodeName",
+			"nodeType",
+			"nodeValue",
+			"firstChild",
+			"lastChild",
+			"previousSibling",
+			"tagName"
+			
+		]
+
+	var DOMModify = function( node ) {
+		
+		//property that stores matched DOM Node
+		this.__node = null;
+		
+	//*************************************************************************************************** start: DOMObjectVerify
+	
+	/**
+	 * A function to determine if argument is an object containing the identifying properties passed in as an array of strings to testAttrs argument
+	 */
+		this.isElement = function( element, testAttrs ) {
+			
+			if( !this.o( element ) || !this.o( testAttrs ) )
+				return false;
+				
+			for( var prop in testAttrs ) {
+				
+				if( !testAttrs[ prop ] in element )
+					return false
+			}
+			
+			return true;
+		} 
+			/*********************** TEST CODE FOR OBJECT TYPE TESTER FUNCTION *************************** test: DOMObjectVerify
+		
+			console.log( "object identification function:", this.isElement( document, ["body","childNodes"] ) );//true
+			*/
+		//*************************************************************************************************** end: DOMObjectVerify
+				
+		if( this.o( node ) ) {
+			
+			this.__node = ( "__node" in node 
+							? node.__node 
+							: (this.isElement( node, requiredElementProperties ) 
+								? node 
+								: null)
+						  );
+		}
+		else if( this.s( node ) ) {
+			//ADD CODE TO ATTEMPT TO PROCESS node AS A CSS SELECTOR
+		}
+
+	}
+
+//aliasing DOMModify's prototype
+	var p = DOMModify.prototype;
+
+//***************************** aliased type tester functionality ********************************* start: types
+/**
+ * A function that determines if input is an object type
+ */
+	p.o = function( val ) {
+		return typeof val == "object";
+	}
+
+/**
+ * A function that determines if input is an string type
+ */
+	p.s = function( val ) {
+		return typeof val == "string";
+	}
+
+/**
+ * A function that determines if input is an number type
+ */
+	p.n = function( val ) {
+		return typeof val =="number";
+	}
+
+/**
+ * A function that determines if input is an function
+ */
+	p.f = function( val ) {
+		return typeof val == "function";
+	}
+/**
+ * A function that determines if input is an indexed array
+ */
+	p.ai = function( val ) {
+		return this.o( val ) && "length" in val;
+	}
+	
+/**
+ * A function that determines if input is not a null value
+ */
+	p.nn = function( val ) {
+		return val != null;
+	}
+	
+	/******************** TEST CODE FOR ALL BASIC TYPE TESTER FUNCTIONS *************************** test:types
+	
+	var modifier = new DOMModify( document.getElementById("tester") );
+	
+	console.log( "object verification function:", modifier.o( {} ) );//true
+	console.log( "string verification function:", modifier.s( "" ) );//true
+	console.log( "number verification function:", modifier.n( 65 ) );//true
+	console.log( "function verification function:", modifier.f( function() {} ) );//true
+	console.log( "indexed array verification function:", modifier.ai( { "one": 3, "two":2, "three":1 } ) );//false
+	console.log( "not null verification function:", modifier.nn( null ) );//false 
+	*/
+	
+//*************************************************************************************************** end:types, start: DOMObjectVerify
+	
+/**
+ * A function to determine if argument is an object containing the identifying properties passed in as an array of strings to testAttrs argument
+ */
+	p.isElement = function( element, testAttrs ) {
+		
+		if( !this.o( element ) || !this.o( testAttrs ) )
+			return false;
+			
+		for( var prop in testAttrs ) {
+			
+			if( !testAttrs[ prop ] in element )
+				return false
+		}
+		
+		return true;
+	} 
+	/*********************** TEST CODE FOR OBJECT TYPE TESTER FUNCTION *************************** test: DOMObjectVerify
+	
+	console.log( "object identification function:", modifier.isElement( document, ["body","childNodes"] ) );//true
+	*/
+//*************************************************************************************************** end: DOMObjectVerify, start: attrClassFunctions
+/**
+ * A function that returns the value stored in an element's attribute or null if attribute not present
+ */
+	p.getAttr = function( attrName ) {
+				
+		if( !this.nn( this.__node ) || !this.s( attrName ) ) 		
+			return null;
+				
+		return this.__node.getAttribute( attrName );
+		
+	}
+
+/**
+ * A function that sets an attribute of element with specified value
+ */	
+	p.setAttr = function( attrName, attrValue ) {
+		
+		if( !this.nn ( this.__node ) )
+			return;
+			
+		this.__node.setAttribute( attrName, attrValue );
+		
+	}
+	
+/**
+ * A function that returns all applied classes of an element as an indexed array
+ */	
+	p.getClasses = function() {
+		
+		if( !this.nn ( this.__node ) )
+			return [];
+			
+		return this.__node.className.split(" ");
+		
+	}
+	
+/**
+ * A function that adds a class to an element
+ */
+	p.addClass = function( className ) {
+		
+		if( !this.nn ( this.__node ) )
+			return;
+			
+		var c = this.getClasses();
+		
+		c.push( className );
+				
+		var classStr = c.join(" ");
+		
+		if( this.s( classStr ) ) 
+		
+			this.__node.className = classStr;
+	}
+	
+/**
+ * A function that removes a specific class from an element
+ */
+	p.removeClass = function( className ) {
+		
+		var classes = this.getClasses(),
+			i = classes.indexOf( className );
+
+				
+		if( i > -1 ) {
+			classes.splice( i, 1 );
+			this.__node.className = classes.join( " " );
+		}
+	}
+	
+	/****************************************************************************************** test: attrClassFunctions
+	
+	console.log( "Test getAttr getter function:", modifier.getAttr( "class" ) );//hello world
+	
+	modifier.setAttr( "class", "A test set");
+	
+	console.log( "Test getClasses function:", modifier.getClasses( ).length );//3
+	
+	modifier.removeClass( "A" );
+	
+	console.log( "Test getClasses function:", modifier.getClasses( ).length + " " + modifier.getClasses( )[0] );//2 set
+	
+	modifier.addClass("active");
+	
+	console.log( "Test addClass function:" , modifier.getAttr( "class" ) );
+	*/
+	
+//*************************************************************************************************** end: attrClassFunctions
+</script>
+</html>
